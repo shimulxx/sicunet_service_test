@@ -20,7 +20,7 @@ class MyForegroundService : Service() {
         var tickValue = 0
     }
 
-    private val timer = object : CountDownTimer(300000, 1000) {
+    private val timer = object : CountDownTimer(3000000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
             Log.d(tag, "onTick: ${++tickValue}")
         }

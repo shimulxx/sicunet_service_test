@@ -72,7 +72,6 @@ class MyForegroundService : Service() {
             .build()
 
         startForeground(1, notification) // Start the service in the foreground with the notification
-        // Return the START_STICKY flag if you want the service to restart automatically if killed by the system
         return START_STICKY
     }
 }

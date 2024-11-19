@@ -13,6 +13,9 @@ class BootReceiver : BroadcastReceiver() {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 // For Android 8.0 and above, use startForegroundService to start foreground services
+                val appIntent = Intent(context, MainActivity::class.java)
+                appIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // Required for starting an activity from a BroadcastReceiver
+                context.startActivity(appIntent)
                 context.startForegroundService(serviceIntent)
             } else {
                 context.startService(serviceIntent)

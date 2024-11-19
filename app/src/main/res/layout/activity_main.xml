@@ -14,13 +14,23 @@
         android:textColor="@color/white"
         android:text="Start BLE" />
 
+    <Button
+        android:id="@+id/buttonStopService"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        android:textColor="@color/white"
+        android:layout_below="@+id/buttonStartBle"
+        android:text="STOP BLE" />
+
     <TextView
         android:id="@+id/timerService"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonStartBle"
+        android:layout_below="@+id/buttonStopService"
         android:text="Timer value of service"
         android:textSize="24sp"
+        android:textColor="@color/black"
         android:layout_gravity="center"/>
 
 </RelativeLayout>

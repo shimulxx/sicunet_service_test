@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <!-- Allow enforcing password policies -->
+        <force-lock />
+
+        <!-- Allow wiping the device data (if necessary) -->
+        <wipe-data />
+
+        <!-- Disable the camera to prevent misuse -->
+        <disable-camera />
+
+        <!-- Prevent modifications to keyguard (lock screen) features -->
+        <keyguard-disabled-features />
+
+        <!-- (Optional) Prevent factory reset from the device settings -->
+        <factory-reset-protection />
+
+        <!-- (Optional) Enforce system updates for security -->
+        <set-system-update-policy />
+    </uses-policies>
+</device-admin>

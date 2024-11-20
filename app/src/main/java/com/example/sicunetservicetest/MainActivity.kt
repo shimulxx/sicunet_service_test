@@ -8,9 +8,13 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.Manifest
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 
@@ -41,7 +45,43 @@ class MainActivity : AppCompatActivity() {
         }
         binding.timerService.text = "${MyForegroundService.tickValue}"
         requestPermission()
+        //before run lock screen mode write the following command on adb is mandatory
+        //adb shell dpm set-device-owner com.example.sicunetservicetest/.MyDeviceAdminReceiver
+        startLockTaskMode()
+        //pinScreen()
     }
+
+    private fun startLockTaskMode() {
+        try {
+            if (isDeviceOwner()) {
+                startLockTask() // Locks the screen with this activity
+            } else {
+                Log.d("MyMessage", "App is not the Device Owner. Lock Task mode unavailable.")
+                // Provide fallback or notify the user
+                //println("App is not the Device Owner. Lock Task mode unavailable.")
+            }
+        }
+        catch (e: Exception){
+            Log.d("MyMessage", "${e.message}: ")
+        }
+
+    }
+
+    private fun isDeviceOwner(): Boolean {
+        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val adminComponent = ComponentName(this, MyDeviceAdminReceiver::class.java)
+        return dpm.isDeviceOwnerApp(packageName) && dpm.isAdminActive(adminComponent)
+    }
+
+//    private fun pinScreen() {
+//        val flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+//                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+//                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+//                View.SYSTEM_UI_FLAG_FULLSCREEN or
+//                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+//        window.decorView.systemUiVisibility = flags
+//    }
 
     private fun requestPermission() {
         val overlayPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {

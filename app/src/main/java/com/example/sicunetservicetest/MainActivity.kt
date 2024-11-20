@@ -40,14 +40,23 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.startForegroundService(this, serviceIntent)
         }
         binding.buttonStopService.setOnClickListener {
-            Log.d(tag, "onCreate: clicked ${++value}")
-            applicationContext.stopService(serviceIntent)
+//            Log.d(tag, "onCreate: clicked ${++value}")
+//            applicationContext.stopService(serviceIntent)
+            stopLockTask()
         }
         binding.timerService.text = "${MyForegroundService.tickValue}"
         requestPermission()
+
         //before run lock screen mode write the following command on adb is mandatory
         //adb shell dpm set-device-owner com.example.sicunetservicetest/.MyDeviceAdminReceiver
+
         startLockTaskMode()
+
+        //to remove ownership following ownership command is needed
+//        adb shell dpm remove-active-admin com.example.sicunetservicetest/.MyDeviceAdminReceiver
+//        adb shell pm clear com.example.sicunetservicetest
+//        adb shell pm uninstall com.example.sicunetservicetest
+
         //pinScreen()
     }
 

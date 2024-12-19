@@ -17,6 +17,8 @@ import android.provider.Settings
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import com.hwit.HwitManager
+import com.hwit.HwitManager.HwitSetIOValue
 
 
 class MainActivity : AppCompatActivity() {
@@ -31,26 +33,30 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         // Set the content view to the root of the binding object
         setContentView(binding.root)
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
-        }
-        val serviceIntent = Intent(this, MyForegroundService::class.java)
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+//        }
+//        val serviceIntent = Intent(this, MyForegroundService::class.java)
         binding.buttonStartBle.setOnClickListener {
             Log.d(tag, "onCreate: clicked ${++value}")
-            ContextCompat.startForegroundService(this, serviceIntent)
+            HwitSetIOValue(5, 1)
+            //ContextCompat.startForegroundService(this, serviceIntent)
         }
         binding.buttonStopService.setOnClickListener {
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            applicationContext.stopService(serviceIntent)
-            stopLockTask()
+            HwitSetIOValue(5, 0)
+            Log.d(tag, "onCreate: stopped ${++value}")
+
+            //stopLockTask()
         }
-        binding.timerService.text = "${MyForegroundService.tickValue}"
-        requestPermission()
-
-        //before run lock screen mode write the following command on adb is mandatory
-        //adb shell dpm set-device-owner com.example.sicunetservicetest/.MyDeviceAdminReceiver
-
-        startLockTaskMode()
+//        binding.timerService.text = "${MyForegroundService.tickValue}"
+//        requestPermission()
+//
+//        //before run lock screen mode write the following command on adb is mandatory
+//        //adb shell dpm set-device-owner com.example.sicunetservicetest/.MyDeviceAdminReceiver
+//
+//        startLockTaskMode()
 
         //to remove ownership following ownership command is needed
 //        adb shell dpm remove-active-admin com.example.sicunetservicetest/.MyDeviceAdminReceiver

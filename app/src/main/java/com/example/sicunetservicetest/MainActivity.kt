@@ -23,6 +23,8 @@ import com.hwit.HwitManager.HwitSetIOValue
 import com.hwit.HwitManager.HwitGetIOValue
 import com.hwit.HwitManager.HwitRebootSystem
 import com.hwit.HwitManager.getAvailableCpuFreq
+import com.hwit.HwitManager.HwitSetWifiDhcpIpConnect
+import com.hwit.HwitManager.HwitSetWifiStaticIpConnect
 
 
 class MainActivity : AppCompatActivity() {
@@ -68,16 +70,35 @@ class MainActivity : AppCompatActivity() {
             //HwitSetIOValue(5, 1)
             //HwitRebootSystem(this)
             //ContextCompat.startForegroundService(this, serviceIntent)
+
+            HwitSetWifiStaticIpConnect(
+                this,
+                "Sicunet 5G",
+                "sicunet2025",
+                2,
+                "192.168.1.200",
+                "192.168.1.1",
+                "255.255.255.0",
+                "8.8.8.8",
+                "8.8.4.4"
+            )
         }
         binding.buttonStopService.setOnClickListener {
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            applicationContext.stopService(serviceIntent)
-            val result = HwitGetCpuTemp()
+            //val result = HwitGetCpuTemp()
             //HwitSetIOValue(5, 0)
 //            val result = HwitGetBoardEthIp(this)
-            Log.d(tag, "onCreate: stopped ${result}")
+            //Log.d(tag, "onCreate: stopped ${result}")
 
             //stopLockTask()
+
+            HwitSetWifiDhcpIpConnect(
+                this,
+                "Sicunet 5G",
+                "sicunet2025",
+                2,
+            )
         }
 //        binding.timerService.text = "${MyForegroundService.tickValue}"
 //        requestPermission()

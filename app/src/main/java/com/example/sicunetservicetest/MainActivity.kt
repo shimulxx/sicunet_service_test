@@ -1,24 +1,21 @@
 package com.example.sicunetservicetest
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
-import android.Manifest
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
-import android.content.Context
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
-import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import com.hwit.HwitManager
-import com.hwit.HwitManager.HwitSetIOValue
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +23,24 @@ class MainActivity : AppCompatActivity() {
     private var tag = "MainActivity"
 
     private var value = 0
+
+    val PERMISSION_REQUEST_CODE: Int = 1
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String?>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with accessing phone state
+            } else {
+                // Permission denied, inform the user
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,13 +54,15 @@ class MainActivity : AppCompatActivity() {
 //        val serviceIntent = Intent(this, MyForegroundService::class.java)
         binding.buttonStartBle.setOnClickListener {
             Log.d(tag, "onCreate: clicked ${++value}")
-            HwitSetIOValue(5, 1)
+            val powerManager = getSystemService(POWER_SERVICE) as PowerManager?
+            powerManager?.reboot(null)
+            //HwitSetIOValue(5, 1)
             //ContextCompat.startForegroundService(this, serviceIntent)
         }
         binding.buttonStopService.setOnClickListener {
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            applicationContext.stopService(serviceIntent)
-            HwitSetIOValue(5, 0)
+            //HwitSetIOValue(5, 0)
             Log.d(tag, "onCreate: stopped ${++value}")
 
             //stopLockTask()
@@ -64,6 +81,17 @@ class MainActivity : AppCompatActivity() {
 //        adb shell pm uninstall com.example.sicunetservicetest
 
         //pinScreen()
+
+        //requestPermission2()
+    }
+
+    private fun requestPermission2(){
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.REBOOT)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.REBOOT),
+                PERMISSION_REQUEST_CODE
+            );
+        }
     }
 
     private fun startLockTaskMode() {

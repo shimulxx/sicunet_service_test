@@ -16,6 +16,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
+import com.hwit.HwitManager.HwitGetBoardEthIp
+import com.hwit.HwitManager
+import com.hwit.HwitManager.HwitGetCpuTemp
+import com.hwit.HwitManager.HwitSetIOValue
+import com.hwit.HwitManager.HwitGetIOValue
+import com.hwit.HwitManager.HwitRebootSystem
+import com.hwit.HwitManager.getAvailableCpuFreq
 
 
 class MainActivity : AppCompatActivity() {
@@ -48,22 +55,27 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         // Set the content view to the root of the binding object
         setContentView(binding.root)
+        val currentValue = HwitGetIOValue(5)
+        Log.d(tag, "onCreate: current value: $currentValue")
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
 //            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
 //        }
 //        val serviceIntent = Intent(this, MyForegroundService::class.java)
         binding.buttonStartBle.setOnClickListener {
-            Log.d(tag, "onCreate: clicked ${++value}")
-            val powerManager = getSystemService(POWER_SERVICE) as PowerManager?
-            powerManager?.reboot(null)
+//            Log.d(tag, "onCreate: clicked ${++value}")
+//            val powerManager = getSystemService(POWER_SERVICE) as PowerManager?
+//            powerManager?.reboot(null)
             //HwitSetIOValue(5, 1)
+            //HwitRebootSystem(this)
             //ContextCompat.startForegroundService(this, serviceIntent)
         }
         binding.buttonStopService.setOnClickListener {
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            applicationContext.stopService(serviceIntent)
+            val result = HwitGetCpuTemp()
             //HwitSetIOValue(5, 0)
-            Log.d(tag, "onCreate: stopped ${++value}")
+//            val result = HwitGetBoardEthIp(this)
+            Log.d(tag, "onCreate: stopped ${result}")
 
             //stopLockTask()
         }

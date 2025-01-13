@@ -50,6 +50,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".NotificationActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTask"
+            android:turnScreenOn="true"
+            android:showWhenLocked="true"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"/>
+
         <service
             android:name=".MyForegroundService"
             android:enabled="true"

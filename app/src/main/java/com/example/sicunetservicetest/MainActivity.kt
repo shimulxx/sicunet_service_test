@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 
         //requestPermission2()
         requestPermission3()
-        //turnScreenOnAndKeyguardOff()
+        turnScreenOnAndKeyguardOff()
     }
 
 

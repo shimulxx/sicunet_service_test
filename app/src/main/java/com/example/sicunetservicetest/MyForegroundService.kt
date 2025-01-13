@@ -1,8 +1,6 @@
 package com.example.sicunetservicetest
 
-import android.Manifest
 import android.R
-import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -12,33 +10,35 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
-import android.os.SystemClock
-import android.telecom.Connection
-import android.telecom.ConnectionRequest
-import android.telecom.ConnectionService
-import android.telecom.PhoneAccountHandle
+import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import kotlin.random.Random
+
 
 class MyForegroundService : Service() {
     private val tag = "MyForegroundService"
 
+    private lateinit var player: MediaPlayer
+
     companion object {
         private const val CHANNEL_ID = "ForegroundServiceChannel"
         var tickValue = 0
+
     }
 
     private val timer = object : CountDownTimer(3000000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
             Log.d(tag, "onTick: ${++tickValue}")
-            if(tickValue > 0 && tickValue % 13 == 0){
+            if(tickValue > 0 && tickValue % 15 == 0){
                 showFullScreenNotification()
             }
         }
@@ -52,12 +52,19 @@ class MyForegroundService : Service() {
         super.onCreate()
         createNotificationChannel()
         Log.d(tag, "onCreate: called")
+        player = MediaPlayer.create(
+            this,
+            Settings.System.DEFAULT_RINGTONE_URI
+        )
+        player.setVolume(0.1f, 0.1f)
+        //player.start()
         timer.start()
     }
 
     override fun onDestroy() {
         timer.cancel()
         Log.d(tag, "onDestroy: called")
+        player.stop()
         super.onDestroy()
     }
 
@@ -128,13 +135,16 @@ class MyForegroundService : Service() {
             ).apply {
                 description = "Notifications for full-screen intents"
             }
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+            val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            val ringtone = RingtoneManager.getRingtone(this, ringtoneUri)
+            Log.d("PAGLU", ringtoneUri.toString())
+            Log.d("PAGLU2", Settings.System.DEFAULT_RINGTONE_URI.toString())
         }
 
         // Intent for the activity to launch
-        val intent = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, NotificationActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pendingIntent = PendingIntent.getActivity(
@@ -153,12 +163,19 @@ class MyForegroundService : Service() {
             .setCategory(NotificationCompat.CATEGORY_CALL)
             .setFullScreenIntent(pendingIntent, true)
             .setAutoCancel(true)
+            .setSound(Settings.System.DEFAULT_RINGTONE_URI)
             .build()
 
         // Show the notification
         // need to check permission
-        with(NotificationManagerCompat.from(this)) {
-            notify(Random.nextInt(), notification)
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            //player.stop()
+            //player.start()
+            with(NotificationManagerCompat.from(this)) {
+                notify(Random.nextInt(), notification)
+            }
         }
+
+
     }
 }

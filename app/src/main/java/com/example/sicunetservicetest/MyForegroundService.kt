@@ -1,6 +1,5 @@
 package com.example.sicunetservicetest
 
-import android.R
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,6 +9,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Build
@@ -38,7 +39,7 @@ class MyForegroundService : Service() {
     private val timer = object : CountDownTimer(3000000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
             Log.d(tag, "onTick: ${++tickValue}")
-            if(tickValue > 0 && tickValue % 15 == 0){
+            if(tickValue > 0 && tickValue % 10 == 0){
                 showFullScreenNotification()
             }
         }
@@ -59,6 +60,13 @@ class MyForegroundService : Service() {
         player.setVolume(0.1f, 0.1f)
         //player.start()
         timer.start()
+//        try {
+//            val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+//            val r = RingtoneManager.getRingtone(this, notification)
+//            r.play()
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
     }
 
     override fun onDestroy() {
@@ -93,7 +101,7 @@ class MyForegroundService : Service() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("My Service")
             .setContentText("Running in the background")
-            .setSmallIcon(R.drawable.btn_plus)
+            .setSmallIcon(android.R.drawable.btn_plus)
             .setContentIntent(pendingIntent)
             .setOngoing(true) // Makes the notification non-dismissible
             .build()
@@ -115,7 +123,7 @@ class MyForegroundService : Service() {
 
         val notification = Notification.Builder(this, CHANNEL_ID)
             .setContentIntent(pendingIntent)
-            .setSmallIcon(R.drawable.btn_plus)
+            .setSmallIcon(android.R.drawable.btn_plus)
             .setStyle(Notification.CallStyle.forOngoingCall(incomingCaller, pendingIntent))
             .addPerson(incomingCaller)
             .build()
@@ -128,19 +136,31 @@ class MyForegroundService : Service() {
 
         // Create the notification channel (for Android O and higher)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                channelName,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notifications for full-screen intents"
-            }
+//            val ringtone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+//            val audioAttributes = AudioAttributes.Builder()
+//                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+//                .setLegacyStreamType(AudioManager.STREAM_RING)
+//                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+//                .build()
+
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            val existingChannel = notificationManager.getNotificationChannel(channelId)
+            if (existingChannel != null) {
+                notificationManager.deleteNotificationChannel(channelId)
+            }
+
+            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Notifications for full-screen intents"
+                //setSound(ringtone, audioAttributes)
+            }
+
             notificationManager.createNotificationChannel(channel)
-            val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            val ringtone = RingtoneManager.getRingtone(this, ringtoneUri)
-            Log.d("PAGLU", ringtoneUri.toString())
-            Log.d("PAGLU2", Settings.System.DEFAULT_RINGTONE_URI.toString())
+//            val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+//            val ringtone = RingtoneManager.getRingtone(this, ringtoneUri)
+//            Log.d("PAGLU", ringtoneUri.toString())
+//            Log.d("PAGLU2", Settings.System.DEFAULT_RINGTONE_URI.toString())
+//            Log.d("PAGLU3", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE).toString())
         }
 
         // Intent for the activity to launch
@@ -158,12 +178,13 @@ class MyForegroundService : Service() {
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Incoming Call")
             .setContentText("Tap to answer")
-            .setSmallIcon(R.drawable.ic_dialog_info)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(pendingIntent)
             .setFullScreenIntent(pendingIntent, true)
             .setAutoCancel(true)
-            .setSound(Settings.System.DEFAULT_RINGTONE_URI)
             .build()
 
         // Show the notification
@@ -171,9 +192,10 @@ class MyForegroundService : Service() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
             //player.stop()
             //player.start()
-            with(NotificationManagerCompat.from(this)) {
-                notify(Random.nextInt(), notification)
-            }
+            NotificationManagerCompat.from(this).notify(Random.nextInt(), notification)
+//            with(NotificationManagerCompat.from(this)) {
+//                notify(Random.nextInt(), notification)
+//            }
         }
 
 

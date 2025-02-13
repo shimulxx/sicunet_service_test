@@ -24,45 +24,57 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 100
 
-    private fun checkWifiPermission() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-            )
-        } else {
-            // Permissions already granted, proceed with Wi-Fi scanning
-            scanWifiNetworks()
-        }
+    private fun enableWifiPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+        )
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String?>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String?>, grantResults: IntArray) {
         if (requestCode == MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
-            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                scanWifiNetworks()
+            var allGranted = true
+            for(item in grantResults){
+                if(item != PackageManager.PERMISSION_GRANTED){
+                    allGranted = false
+                    break
+                }
             }
-            else {
-                Toast.makeText(this, "Location permission is required to scan Wi-Fi networks", Toast.LENGTH_SHORT).show()
-            }
+            if(allGranted) scanWifiNetworks(permissions)
+            else { Toast.makeText(this, "Location permission is required to scan Wi-Fi networks", Toast.LENGTH_SHORT).show() }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    private fun scanWifiNetworks() {
+    private fun scanWifiNetworks(permissions: Array<String?>) {
+        for(currentPermission in permissions){
+            if(currentPermission == null) return
+            else {
+                if (ContextCompat.checkSelfPermission(this, currentPermission) != PackageManager.PERMISSION_GRANTED){
+                    return
+                }
+            }
+        }
+
         wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
         val scanResults: List<ScanResult> = wifiManager.scanResults
 
         for (scanResult in scanResults) {
-            val ssid = scanResult.SSID
-            Log.d("SSID", ssid)
+            var ssid = ""
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val byteArray = scanResult.wifiSsid?.bytes
+                byteArray?.let {
+                    ssid = String(byteArray, Charsets.UTF_8)
+                }
+            }
+            else { ssid = scanResult.SSID }
+
+            Log.d("SSID", "SSID: $ssid BSID: ${scanResult.BSSID} LEVEL: ${scanResult.level}")
         }
     }
 
@@ -77,7 +89,7 @@ class MainActivity : AppCompatActivity() {
         binding.buttonStopService.setOnClickListener {
 
         }
-        checkWifiPermission()
+        enableWifiPermission()
     }
 
 }

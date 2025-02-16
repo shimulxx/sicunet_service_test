@@ -20,6 +20,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
+import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -115,7 +116,9 @@ class MainActivity : AppCompatActivity() {
         binding.buttonStopService.setOnClickListener {
 
         }
-        enableWifiPermission()
+
+        binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
+        //enableWifiPermission()
     }
 
     private fun requestWriteSettingsPermission(context: Context) {
@@ -185,6 +188,28 @@ class MainActivity : AppCompatActivity() {
         }
 
         connectivityManager.requestNetwork(networkRequest, networkCallback)
+    }
+
+    fun getLocalIpAddress(): String? {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val networkInterface = interfaces.nextElement()
+                val addresses = networkInterface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val address = addresses.nextElement()
+                    if (!address.isLoopbackAddress && address.hostAddress != null) {
+                        // Check if it's an IPv4 address
+                        if (address.hostAddress.indexOf(':') < 0) {
+                            return address.hostAddress
+                        }
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+        return null
     }
 
 }

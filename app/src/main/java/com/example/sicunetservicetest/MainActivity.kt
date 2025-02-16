@@ -1,8 +1,15 @@
 package com.example.sicunetservicetest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.Uri
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiManager
+import android.net.wifi.WifiNetworkSpecifier
+import android.net.wifi.WifiNetworkSuggestion
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
+import android.provider.Settings
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -24,14 +32,23 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 100
 
+    private val MY_PERMISSIONS_WRITE_SETTINGS = 101
+
     private fun enableWifiPermission() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(
                 android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
             ),
             MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+        )
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                android.Manifest.permission.WRITE_SETTINGS
+            ),
+            MY_PERMISSIONS_WRITE_SETTINGS
         )
     }
 
@@ -46,6 +63,9 @@ class MainActivity : AppCompatActivity() {
             }
             if(allGranted) scanWifiNetworks(permissions)
             else { Toast.makeText(this, "Location permission is required to scan Wi-Fi networks", Toast.LENGTH_SHORT).show() }
+        }
+        else if(requestCode == MY_PERMISSIONS_WRITE_SETTINGS){
+            requestWriteSettingsPermission(this)
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
@@ -84,12 +104,87 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.buttonStartBle.setOnClickListener {
-
+            //connectToWifi("Sicunet 5G", "sicunet2025")
+            if(!Settings.System.canWrite(this)){
+                requestWriteSettingsPermission(this)
+            }
+            else{
+                conToWifi2()
+            }
         }
         binding.buttonStopService.setOnClickListener {
 
         }
         enableWifiPermission()
+    }
+
+    private fun requestWriteSettingsPermission(context: Context) {
+        if (!Settings.System.canWrite(context)) {
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                data = Uri.parse("package:" + context.packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            Toast.makeText(context, "Please allow modifying system settings", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun connectToWifi(ssid: String, password: String) {
+        val wifiConnector = WifiConnector(applicationContext)
+        wifiConnector.connectToWifi(ssid, password)
+    }
+
+    class WifiConnector(private val context: Context) {
+
+        fun connectToWifi(ssid: String, password: String) {
+            val wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
+
+            // Create a Wi-Fi network suggestion
+            val suggestion = WifiNetworkSuggestion.Builder()
+                .setSsid(ssid) // SSID of the network
+                .setWpa2Passphrase(password) // Password for WPA2 networks
+                .setIsAppInteractionRequired(true) // Requires user interaction to connect
+                .build()
+
+            // Add the suggestion to the Wi-Fi manager
+            val suggestionsList = listOf(suggestion)
+            val status = wifiManager.addNetworkSuggestions(suggestionsList)
+
+
+            if (status == WifiManager.STATUS_NETWORK_SUGGESTIONS_SUCCESS) {
+                // Successfully added the suggestion
+                // The system will automatically attempt to connect to the network
+            } else {
+                // Failed to add the suggestion
+            }
+        }
+    }
+
+    private fun conToWifi2(){
+        val wifiNetworkSpecifier = WifiNetworkSpecifier.Builder()
+            .setSsid("Sicunet 5G")
+            .setWpa2Passphrase("sicunet2025")
+            .build()
+
+        val networkRequest = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .setNetworkSpecifier(wifiNetworkSpecifier)
+            .build()
+
+        val connectivityManager = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                Log.d("Network work", "on Available: called")
+                connectivityManager.bindProcessToNetwork(network)
+            }
+
+            override fun onUnavailable() {
+                Log.d("Network work", "on unavailable: called")
+            }
+        }
+
+        connectivityManager.requestNetwork(networkRequest, networkCallback)
     }
 
 }

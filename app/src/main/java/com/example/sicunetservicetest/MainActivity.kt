@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
         connectivityManager.requestNetwork(networkRequest, networkCallback)
     }
 
-    fun getLocalIpAddress(): String? {
+    private fun getLocalIpAddress(): String? {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()
             while (interfaces.hasMoreElements()) {

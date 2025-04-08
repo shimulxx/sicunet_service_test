@@ -22,6 +22,7 @@ import com.hwit.HwitManager.HwitGetCpuTemp
 import com.hwit.HwitManager.HwitSetIOValue
 import com.hwit.HwitManager.HwitGetIOValue
 import com.hwit.HwitManager.HwitRebootSystem
+import com.hwit.HwitManager.HwitSetLocalIP
 import com.hwit.HwitManager.getAvailableCpuFreq
 import com.hwit.HwitManager.HwitSetWifiDhcpIpConnect
 import com.hwit.HwitManager.HwitSetWifiStaticIpConnect
@@ -82,6 +83,13 @@ class MainActivity : AppCompatActivity() {
                 "8.8.8.8",
                 "8.8.4.4"
             )
+
+//            HwitSetLocalIP(
+//                this,
+//                "192.168.1.50",
+//                "eth0",
+//                0,
+//            )
         }
         binding.buttonStopService.setOnClickListener {
 //            Log.d(tag, "onCreate: clicked ${++value}")

@@ -72,17 +72,17 @@ class MainActivity : AppCompatActivity() {
             //HwitRebootSystem(this)
             //ContextCompat.startForegroundService(this, serviceIntent)
 
-            HwitSetWifiStaticIpConnect(
-                this,
-                "Sicunet 5G",
-                "sicunet2025",
-                2,
-                "192.168.1.200",
-                "192.168.1.1",
-                "255.255.255.0",
-                "8.8.8.8",
-                "8.8.4.4"
-            )
+//            HwitSetWifiStaticIpConnect(
+//                this,
+//                "Sicunet 5G",
+//                "sicunet2025",
+//                2,
+//                "192.168.1.200",
+//                "192.168.1.1",
+//                "255.255.255.0",
+//                "8.8.8.8",
+//                "8.8.4.4"
+//            )
 
 //            HwitSetLocalIP(
 //                this,
@@ -101,12 +101,14 @@ class MainActivity : AppCompatActivity() {
 
             //stopLockTask()
 
-            HwitSetWifiDhcpIpConnect(
-                this,
-                "Sicunet 5G",
-                "sicunet2025",
-                2,
-            )
+//            HwitSetWifiDhcpIpConnect(
+//                this,
+//                "Sicunet 5G",
+//                "sicunet2025",
+//                2,
+//            )
+
+            //HwitSetIOValue(5, 0)
         }
 //        binding.timerService.text = "${MyForegroundService.tickValue}"
 //        requestPermission()

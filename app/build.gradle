@@ -37,7 +37,8 @@ android {
 }
 
 dependencies {
-    implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/sicunet_service_test/library_work'))
+    implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/sicunet_service_test/lib2'))
+    //implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/sicunet_service_test/library_work'))
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat
     implementation libs.material

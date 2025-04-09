@@ -20,6 +20,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
+import com.hwit.HwitManager
 import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
@@ -106,15 +107,49 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.buttonStartBle.setOnClickListener {
             //connectToWifi("Sicunet 5G", "sicunet2025")
-            if(!Settings.System.canWrite(this)){
-                requestWriteSettingsPermission(this)
-            }
-            else{
-                conToWifi2()
-            }
+//            if(!Settings.System.canWrite(this)){
+//                requestWriteSettingsPermission(this)
+//            }
+//            else{
+//                conToWifi2()
+//            }
+            //HwitManager.HwitSetIOValue(5, 1)
+            HwitManager.HwitSetWifiStaticIpConnect(
+                this,
+                "Sicunet 5G",
+                "sicunet2025",
+                2,
+                "192.168.1.203",
+                "192.168.1.1",
+                "255.255.255.0",
+                "8.8.8.8",
+                "8.8.4.4"
+            )
+//            HwitManager.HwitSetLocalIP(
+//                this,
+//                "192.168.1.50",
+//                "eth0",
+//                0
+//            )
+//            HwitManager.HwitSetWifiDhcpIpConnect(
+//                this,
+//                "Sicunet 5G",
+//                "sicunet2025",
+//                2,
+//            )
+
         }
         binding.buttonStopService.setOnClickListener {
-
+            //HwitManager.HwitSetIOValue(5, 0)
+            //adb command: adb shell ifconfig eth0
+            HwitManager.HwitSetStaticIp(
+                this,
+                "192.168.1.52",
+                "192.168.1.1",
+                "255.255.255.0",
+                "8.8.8.8",
+                "8.8.4.4",
+            )
         }
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"

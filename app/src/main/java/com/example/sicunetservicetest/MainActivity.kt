@@ -113,18 +113,23 @@ class MainActivity : AppCompatActivity() {
 //            else{
 //                conToWifi2()
 //            }
-            //HwitManager.HwitSetIOValue(5, 1)
-            HwitManager.HwitSetWifiStaticIpConnect(
-                this,
-                "Sicunet 5G",
-                "sicunet2025",
-                2,
-                "192.168.1.203",
-                "192.168.1.1",
-                "255.255.255.0",
-                "8.8.8.8",
-                "8.8.4.4"
-            )
+            HwitManager.HwitSetIOValue(5, 1)
+            //HwitManager.HwitOpenAuxBacklight()
+
+//            HwitManager.HwitSetWifiStaticIpConnect(
+//                this,
+//                "Sicunet 5G",
+//                "sicunet2025",
+//                2,
+//                "192.168.1.203",
+//                "192.168.1.1",
+//                "255.255.255.0",
+//                "8.8.8.8",
+//                "8.8.4.4"
+//            )
+
+           // HwitManager.HwitSetAutoTimeZone(this, true)
+
 //            HwitManager.HwitSetLocalIP(
 //                this,
 //                "192.168.1.50",
@@ -140,16 +145,17 @@ class MainActivity : AppCompatActivity() {
 
         }
         binding.buttonStopService.setOnClickListener {
-            //HwitManager.HwitSetIOValue(5, 0)
+            //HwitManager.HwitOpenAuxBacklight()
+            HwitManager.HwitSetIOValue(5, 0)
             //adb command: adb shell ifconfig eth0
-            HwitManager.HwitSetStaticIp(
-                this,
-                "192.168.1.52",
-                "192.168.1.1",
-                "255.255.255.0",
-                "8.8.8.8",
-                "8.8.4.4",
-            )
+//            HwitManager.HwitSetStaticIp(
+//                this,
+//                "192.168.1.52",
+//                "192.168.1.1",
+//                "255.255.255.0",
+//                "8.8.8.8",
+//                "8.8.4.4",
+//            )
         }
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"

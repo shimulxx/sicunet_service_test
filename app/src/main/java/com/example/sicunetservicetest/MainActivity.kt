@@ -24,6 +24,8 @@ import com.hwit.HwitManager
 import com.peripheral.library.PhController
 import java.net.NetworkInterface
 
+//changed
+
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 

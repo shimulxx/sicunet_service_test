@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
 import com.hwit.HwitManager
+import com.peripheral.library.PhController
 import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
@@ -114,17 +115,19 @@ class MainActivity : AppCompatActivity() {
 //                conToWifi2()
 //            }
             //HwitManager.HwitSetIOValue(5, 1)
-            HwitManager.HwitSetWifiStaticIpConnect(
-                this,
-                "Sicunet 5G",
-                "sicunet2025",
-                2,
-                "192.168.1.203",
-                "192.168.1.1",
-                "255.255.255.0",
-                "8.8.8.8",
-                "8.8.4.4"
-            )
+
+//            HwitManager.HwitSetWifiStaticIpConnect(
+//                this,
+//                "Sicunet 5G",
+//                "sicunet2025",
+//                2,
+//                "192.168.1.203",
+//                "192.168.1.1",
+//                "255.255.255.0",
+//                "8.8.8.8",
+//                "8.8.4.4"
+//            )
+
 //            HwitManager.HwitSetLocalIP(
 //                this,
 //                "192.168.1.50",
@@ -138,18 +141,34 @@ class MainActivity : AppCompatActivity() {
 //                2,
 //            )
 
+            PhController.whiteLight_Control_Open(this)
+            PhController.green_Led_Open()
+
+            //PhController.relay_Control_Open()
+
+            //PhController.reboot(this)
+
         }
         binding.buttonStopService.setOnClickListener {
             //HwitManager.HwitSetIOValue(5, 0)
             //adb command: adb shell ifconfig eth0
-            HwitManager.HwitSetStaticIp(
-                this,
-                "192.168.1.52",
-                "192.168.1.1",
-                "255.255.255.0",
-                "8.8.8.8",
-                "8.8.4.4",
-            )
+
+            //HwitManager.HwitSetDhcpIp(this)
+
+//            HwitManager.HwitSetStaticIp(
+//                this,
+//                "192.168.1.52",
+//                "192.168.1.1",
+//                "255.255.255.0",
+//                "8.8.8.8",
+//                "8.8.4.4",
+//            )
+
+            PhController.whiteLight_Control_Close(this)
+
+            PhController.close_Led()
+
+            //PhController.relay_Control_Close()
         }
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"

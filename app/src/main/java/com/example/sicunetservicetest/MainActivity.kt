@@ -1,4 +1,7 @@
 package com.example.sicunetservicetest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,11 +23,17 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
+import com.dk.uartnfc.DKCloudID.IDCardData
+import com.dk.uartnfc.DeviceManager.DeviceManagerCallback
+import com.dk.uartnfc.DeviceManager.UartNfcDevice
 import com.hwit.HwitManager
 import com.peripheral.library.PhController
 import java.net.NetworkInterface
+import kotlin.math.log
 
 //changed
+
+fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }.uppercase()
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -103,11 +112,96 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initWeigonListener(){
+
+        PhController.weigen26Write("test",object: PhController.WeigenResultListener{
+            override fun onWriteInfo(p0: String?) {
+                Log.d("CARD INFO", "onWriteInfo: $p0")
+            }
+
+        })
+
+        PhController.wiegand34Write("hello", object: PhController.WeigenResultListener{
+            override fun onWriteInfo(p0: String?) {
+                Log.d("CARD INFO", "onWriteInfo: $p0")
+            }
+
+        })
+    }
+
+    var uartNfcDevice: UartNfcDevice? = null
+    private fun initReader(){
+        uartNfcDevice = UartNfcDevice()
+        val ports = uartNfcDevice?.serialManager?.availablePorts
+        //uartNfcDevice?.serialManager?.open("/dev/tty/ttyS4", "115200")
+        //uartNfcDevice?.openDevice("ttyS4")
+        if(uartNfcDevice?.serialManager?.isOpen ?: false) uartNfcDevice?.serialManager?.close()
+        uartNfcDevice?.serialManager?.open("/dev/ttyS4", "115200")
+        uartNfcDevice?.setCallBack(object: DeviceManagerCallback() {
+            override fun onReceiveRfnSearchCard(blnIsSus: Boolean, cardType: Int, bytCardSn: ByteArray?, bytCarATS: ByteArray?) {
+                super.onReceiveRfnSearchCard(blnIsSus, cardType, bytCardSn, bytCarATS)
+                val cardSerialHex = bytCardSn?.toHexString()
+                Log.d("CARD WORK", "TYPE: $cardType")
+                Log.d("CARD WORK", "Serial: $cardSerialHex")
+                Log.d("CARD WORK", "ATS: ${bytCarATS?.toHexString()}")
+
+                val facility = cardSerialHex?.take(2)
+                val serialNumber = cardSerialHex?.drop(2)
+
+                Log.d("CARD WORK", "Facility Code: ${facility?.toInt(16)}")
+                Log.d("CARD WORK", "Serial Number: ${serialNumber?.toInt(16)}")
+            }
+
+            override fun onReceiveSamVIdStart(initData: ByteArray?) {
+                Log.d("CARD WORK", "onReceiveSamVIdStart()")
+                super.onReceiveSamVIdStart(initData)
+            }
+
+            override fun onReceiveSamVIdSchedule(rate: Int) {
+                Log.d("CARD WORK", "onReceiveSamVIdSchedule()")
+                super.onReceiveSamVIdSchedule(rate)
+            }
+
+            override fun onReceiveSamVIdException(msg: String?) {
+                Log.d("CARD WORK", "onReceiveSamVIdException()")
+                super.onReceiveSamVIdException(msg)
+            }
+
+            override fun onReceiveIDCardData(idCardData: IDCardData?) {
+                Log.d("CARD WORK", "onReceiveIDCardData()")
+                super.onReceiveIDCardData(idCardData)
+            }
+
+            override fun onReceiveCardLeave() {
+                Log.d("CARD WORK", "onReceiveCardLeave()")
+                super.onReceiveCardLeave()
+            }
+
+            override fun onReceiveACK() {
+                Log.d("CARD WORK", "onReceiveACK()")
+                super.onReceiveACK()
+            }
+
+            override fun onReceiveNACK() {
+                Log.d("CARD WORK", "onReceiveNACK()")
+                super.onReceiveNACK()
+            }
+        })
+    }
+
+    override fun onDestroy() {
+        uartNfcDevice?.closeDevice()
+        uartNfcDevice?.destroy()
+        super.onDestroy()
+    }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        //initWeigonListener()
+        initReader()
         binding.buttonStartBle.setOnClickListener {
             //connectToWifi("Sicunet 5G", "sicunet2025")
 //            if(!Settings.System.canWrite(this)){
@@ -143,13 +237,22 @@ class MainActivity : AppCompatActivity() {
 //                2,
 //            )
 
-            PhController.whiteLight_Control_Open(this)
-            PhController.green_Led_Open()
+//            PhController.whiteLight_Control_Open(this)
+//            PhController.green_Led_Open()
 
             //PhController.relay_Control_Open()
 
             //PhController.reboot(this)
 
+//            PhController.showStatusBar(this)
+//            PhController.showNavigationBar(this)
+
+            //PhController.doorbell_control_open()
+
+            //testBLEAdvertise()
+
+            //Log.d("CARD INFO", "onCreate: ${PhController.weigen26Read()}")
+            testBLEAdvertise()
         }
         binding.buttonStopService.setOnClickListener {
             //HwitManager.HwitSetIOValue(5, 0)
@@ -166,15 +269,47 @@ class MainActivity : AppCompatActivity() {
 //                "8.8.4.4",
 //            )
 
-            PhController.whiteLight_Control_Close(this)
+//            PhController.whiteLight_Control_Close(this)
+//
+//            PhController.close_Led()
 
-            PhController.close_Led()
+//            PhController.hideNavigationBar(this)
+//            PhController.hideStatusBar(this)
 
             //PhController.relay_Control_Close()
+
+           // PhController.doorbell_control_close()
         }
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
         //enableWifiPermission()
+    }
+
+    private fun testBLEAdvertise(){
+        var bluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
+
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothManager.adapter
+
+        // Check if advertising is supported
+//        if (!bluetoothAdapter.isMultipleAdvertisementSupported) {
+//            Log.e("BLE", "Advertising not supported")
+//            return
+//        }
+//        else {
+//            Log.d("BLE", "testBLEAdvertise: SUPPORTED") }
+
+        bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
+
+        Log.d("BLE WORK", "ENABLED: ${bluetoothAdapter.isEnabled}")
+
+        if (!bluetoothAdapter.isLeExtendedAdvertisingSupported) {
+            Log.e("BLE WORK", "Advertising not supported")
+            return
+        }
+        else {
+            Log.d("BLE WORK", "Advertising SUPPORTED") }
+
     }
 
     private fun requestWriteSettingsPermission(context: Context) {

@@ -1,6 +1,10 @@
 package com.example.sicunetservicetest
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.AdvertiseCallback
+import android.bluetooth.le.AdvertiseData
+import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.content.Intent
@@ -15,6 +19,7 @@ import android.net.wifi.WifiNetworkSpecifier
 import android.net.wifi.WifiNetworkSuggestion
 import android.os.Build
 import android.os.Bundle
+import android.os.ParcelUuid
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -23,12 +28,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
+import androidx.annotation.RequiresPermission
 import com.dk.uartnfc.DKCloudID.IDCardData
 import com.dk.uartnfc.DeviceManager.DeviceManagerCallback
 import com.dk.uartnfc.DeviceManager.UartNfcDevice
 import com.hwit.HwitManager
 import com.peripheral.library.PhController
 import java.net.NetworkInterface
+import java.util.UUID
 import kotlin.math.log
 
 //changed
@@ -201,7 +208,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         //initWeigonListener()
-        initReader()
+       // initReader()
         binding.buttonStartBle.setOnClickListener {
             //connectToWifi("Sicunet 5G", "sicunet2025")
 //            if(!Settings.System.canWrite(this)){
@@ -283,32 +290,61 @@ class MainActivity : AppCompatActivity() {
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
         //enableWifiPermission()
+
     }
 
+    var bluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
+
     private fun testBLEAdvertise(){
-        var bluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
 
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
 
         // Check if advertising is supported
 //        if (!bluetoothAdapter.isMultipleAdvertisementSupported) {
-//            Log.e("BLE", "Advertising not supported")
+//            Log.e("BLE WORK", "Advertising not supported")
 //            return
 //        }
 //        else {
-//            Log.d("BLE", "testBLEAdvertise: SUPPORTED") }
+//            Log.d("BLE WORK", "testBLEAdvertise: SUPPORTED") }
 
         bluetoothLeAdvertiser = bluetoothAdapter.bluetoothLeAdvertiser
 
         Log.d("BLE WORK", "ENABLED: ${bluetoothAdapter.isEnabled}")
 
-        if (!bluetoothAdapter.isLeExtendedAdvertisingSupported) {
-            Log.e("BLE WORK", "Advertising not supported")
-            return
-        }
-        else {
-            Log.d("BLE WORK", "Advertising SUPPORTED") }
+        val settings = AdvertiseSettings.Builder()
+            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+            .setConnectable(true) // Set to false for non-connectable advertising
+            .build()
+
+        val data = AdvertiseData.Builder()
+            .setIncludeDeviceName(true) // Include device name
+            .addServiceUuid(ParcelUuid(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"))) // Example UUID
+            .addServiceData(
+                ParcelUuid(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")),
+                "HelloWorld".toByteArray()
+            )
+            .build()
+
+        bluetoothLeAdvertiser?.startAdvertising(settings, data, object : AdvertiseCallback(){
+            override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+                Log.d("BLE WORK", "onStartSuccess: ")
+                super.onStartSuccess(settingsInEffect)
+            }
+
+            override fun onStartFailure(errorCode: Int) {
+                Log.d("BLE WORK", "onStartFailure: ")
+                super.onStartFailure(errorCode)
+            }
+        })
+
+//        if (!bluetoothAdapter.isLeExtendedAdvertisingSupported) {
+//            Log.e("BLE WORK", "Advertising not supported")
+//            return
+//        }
+//        else {
+//            Log.d("BLE WORK", "Advertising SUPPORTED") }
 
     }
 

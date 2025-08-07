@@ -1,6 +1,8 @@
 package com.example.sicunetservicetest
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattServerCallback
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
@@ -209,6 +211,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         //initWeigonListener()
        // initReader()
+        requestPermissions(
+            arrayOf(
+                Manifest.permission.BLUETOOTH_ADVERTISE,
+            ),
+            577
+        )
         binding.buttonStartBle.setOnClickListener {
             //connectToWifi("Sicunet 5G", "sicunet2025")
 //            if(!Settings.System.canWrite(this)){
@@ -286,6 +294,7 @@ class MainActivity : AppCompatActivity() {
             //PhController.relay_Control_Close()
 
            // PhController.doorbell_control_close()
+            bluetoothLeAdvertiser?.stopAdvertising(callback)
         }
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
@@ -295,10 +304,27 @@ class MainActivity : AppCompatActivity() {
 
     var bluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
 
+    val callback = object : AdvertiseCallback(){
+        override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+            Log.d("BLE WORK", "onStartSuccess: ")
+            super.onStartSuccess(settingsInEffect)
+        }
+
+        override fun onStartFailure(errorCode: Int) {
+            Log.d("BLE WORK", "onStartFailure: ")
+            super.onStartFailure(errorCode)
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
     private fun testBLEAdvertise(){
 
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
+
+       // bluetoothAdapter.name = "BD"
+
+        //NOT COMPLETED YET, NEED FURTHER DISCUSSION.
 
         // Check if advertising is supported
 //        if (!bluetoothAdapter.isMultipleAdvertisementSupported) {
@@ -319,7 +345,7 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         val data = AdvertiseData.Builder()
-            .setIncludeDeviceName(true) // Include device name
+            .setIncludeDeviceName(false) // Include device name
             .addServiceUuid(ParcelUuid(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"))) // Example UUID
             .addServiceData(
                 ParcelUuid(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")),
@@ -327,17 +353,7 @@ class MainActivity : AppCompatActivity() {
             )
             .build()
 
-        bluetoothLeAdvertiser?.startAdvertising(settings, data, object : AdvertiseCallback(){
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-                Log.d("BLE WORK", "onStartSuccess: ")
-                super.onStartSuccess(settingsInEffect)
-            }
-
-            override fun onStartFailure(errorCode: Int) {
-                Log.d("BLE WORK", "onStartFailure: ")
-                super.onStartFailure(errorCode)
-            }
-        })
+        bluetoothLeAdvertiser?.startAdvertising(settings, data, callback)
 
 //        if (!bluetoothAdapter.isLeExtendedAdvertisingSupported) {
 //            Log.e("BLE WORK", "Advertising not supported")
@@ -347,6 +363,52 @@ class MainActivity : AppCompatActivity() {
 //            Log.d("BLE WORK", "Advertising SUPPORTED") }
 
     }
+//Bluetooth GATT SERVICE
+//    private val gattServerCallback = object : BluetoothGattServerCallback() {
+//        override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
+//            super.onConnectionStateChange(device, status, newState)
+//            Log.d("BLE WORK", "Connection state changed: ${if (newState == BluetoothProfile.STATE_CONNECTED) "Connected" else "Disconnected"}")
+//        }
+//
+//        override fun onCharacteristicReadRequest(
+//            device: BluetoothDevice?,
+//            requestId: Int,
+//            offset: Int,
+//            characteristic: BluetoothGattCharacteristic?
+//        ) {
+//            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+//            // Handle read requests
+//        }
+//
+//        override fun onCharacteristicWriteRequest(
+//            device: BluetoothDevice?,
+//            requestId: Int,
+//            characteristic: BluetoothGattCharacteristic?,
+//            preparedWrite: Boolean,
+//            responseNeeded: Boolean,
+//            offset: Int,
+//            value: ByteArray?
+//        ) {
+//            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
+//
+//            // This is where you receive data
+//            value?.let {
+//                val receivedString = String(it)
+//                Log.d("BLE WORK", "Received data: $receivedString")
+//            }
+//
+//            // Send response if needed
+//            if (responseNeeded) {
+//                bluetoothGattServer?.sendResponse(
+//                    device,
+//                    requestId,
+//                    BluetoothGatt.GATT_SUCCESS,
+//                    0,
+//                    null
+//                )
+//            }
+//        }
+//    }
 
     private fun requestWriteSettingsPermission(context: Context) {
         if (!Settings.System.canWrite(context)) {

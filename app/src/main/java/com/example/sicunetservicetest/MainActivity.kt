@@ -36,6 +36,7 @@ import com.dk.uartnfc.DeviceManager.DeviceManagerCallback
 import com.dk.uartnfc.DeviceManager.UartNfcDevice
 import com.hwit.HwitManager
 import com.peripheral.library.PhController
+import com.sdk.api.manager.ApiManager
 import java.net.NetworkInterface
 import java.util.UUID
 import kotlin.math.log
@@ -56,6 +57,8 @@ class MainActivity : AppCompatActivity() {
     private val MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 100
 
     private val MY_PERMISSIONS_WRITE_SETTINGS = 101
+
+    private lateinit var apiManger: ApiManager
 
     private fun enableWifiPermission() {
         ActivityCompat.requestPermissions(
@@ -122,7 +125,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initWeigonListener(){
-
         PhController.weigen26Write("test",object: PhController.WeigenResultListener{
             override fun onWriteInfo(p0: String?) {
                 Log.d("CARD INFO", "onWriteInfo: $p0")
@@ -201,6 +203,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         uartNfcDevice?.closeDevice()
         uartNfcDevice?.destroy()
+        uartNfcDevice?.release()
         super.onDestroy()
     }
 
@@ -209,14 +212,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        apiManger = ApiManager.getInstance(this)
         //initWeigonListener()
-       // initReader()
-        requestPermissions(
-            arrayOf(
-                Manifest.permission.BLUETOOTH_ADVERTISE,
-            ),
-            577
-        )
+        initReader()
+//        requestPermissions(
+//            arrayOf(
+//                Manifest.permission.BLUETOOTH_ADVERTISE,
+//            ),
+//            577
+//        )
         binding.buttonStartBle.setOnClickListener {
             //connectToWifi("Sicunet 5G", "sicunet2025")
 //            if(!Settings.System.canWrite(this)){
@@ -267,35 +271,64 @@ class MainActivity : AppCompatActivity() {
             //testBLEAdvertise()
 
             //Log.d("CARD INFO", "onCreate: ${PhController.weigen26Read()}")
-            testBLEAdvertise()
-        }
-        binding.buttonStopService.setOnClickListener {
-            //HwitManager.HwitSetIOValue(5, 0)
-            //adb command: adb shell ifconfig eth0
+            //testBLEAdvertise()
 
-            //HwitManager.HwitSetDhcpIp(this)
+            Log.d("MainActivity Work", "${apiManger.runningMemory}")
 
-//            HwitManager.HwitSetStaticIp(
-//                this,
-//                "192.168.1.52",
-//                "192.168.1.1",
+//            apiManger.setStaticIpMode(
+//                "192.168.1.20",
 //                "255.255.255.0",
+//                "192.168.1.1",
 //                "8.8.8.8",
-//                "8.8.4.4",
+//                "8.8.4.4"
 //            )
 
-//            PhController.whiteLight_Control_Close(this)
-//
-//            PhController.close_Led()
+//            apiManger.setStaticIpMode(
+//                "192.168.1.20",
+//                "255.255.255.0",
+//                "192.168.1.1",
+//                "8.8.8.8",
+//                "8.8.4.4"
+//            )
 
-//            PhController.hideNavigationBar(this)
-//            PhController.hideStatusBar(this)
+//            apiManger.setWifiStaticIpMode(
+//                "192.168.1.30",
+//                24,
+//                "192.168.1.1",
+//                "8.8.8.8",
+//                "8.8.4.4"
+//            )
 
-            //PhController.relay_Control_Close()
+            //apiManger.setWifiDhcpMode()
 
-           // PhController.doorbell_control_close()
-            bluetoothLeAdvertiser?.stopAdvertising(callback)
         }
+//        binding.buttonStopService.setOnClickListener {
+//            //HwitManager.HwitSetIOValue(5, 0)
+//            //adb command: adb shell ifconfig eth0
+//
+//            //HwitManager.HwitSetDhcpIp(this)
+//
+////            HwitManager.HwitSetStaticIp(
+////                this,
+////                "192.168.1.52",
+////                "192.168.1.1",
+////                "255.255.255.0",
+////                "8.8.8.8",
+////                "8.8.4.4",
+////            )
+//
+////            PhController.whiteLight_Control_Close(this)
+////
+////            PhController.close_Led()
+//
+////            PhController.hideNavigationBar(this)
+////            PhController.hideStatusBar(this)
+//
+//            //PhController.relay_Control_Close()
+//
+//           // PhController.doorbell_control_close()
+//            bluetoothLeAdvertiser?.stopAdvertising(callback)
+//        }
 
         binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
         //enableWifiPermission()

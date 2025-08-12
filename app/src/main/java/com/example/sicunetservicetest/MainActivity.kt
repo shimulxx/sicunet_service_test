@@ -46,6 +46,16 @@ import kotlin.math.log
 fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }.uppercase()
 
 class MainActivity : AppCompatActivity() {
+
+    external fun stringFromJNI(): String
+
+    companion object {
+        // Used to load the 'myndktest' library on application startup.
+        init {
+            System.loadLibrary("sicunetservicetest")
+        }
+    }
+
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var wifiManager: WifiManager
@@ -283,16 +293,16 @@ class MainActivity : AppCompatActivity() {
 //                "8.8.4.4"
 //            )
 
-//            apiManger.setStaticIpMode(
-//                "192.168.1.20",
-//                "255.255.255.0",
-//                "192.168.1.1",
-//                "8.8.8.8",
-//                "8.8.4.4"
-//            )
+            apiManger.setStaticIpMode(
+                "192.168.1.248",
+                "255.255.255.0",
+                "192.168.1.1",
+                "8.8.8.8",
+                "8.8.4.4"
+            )
 
 //            apiManger.setWifiStaticIpMode(
-//                "192.168.1.30",
+//                "192.168.1.248",
 //                24,
 //                "192.168.1.1",
 //                "8.8.8.8",
@@ -300,6 +310,7 @@ class MainActivity : AppCompatActivity() {
 //            )
 
             //apiManger.setWifiDhcpMode()
+            //apiManger.setEthDhcpMode()
 
         }
 //        binding.buttonStopService.setOnClickListener {
@@ -330,7 +341,8 @@ class MainActivity : AppCompatActivity() {
 //            bluetoothLeAdvertiser?.stopAdvertising(callback)
 //        }
 
-        binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
+        //binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
+        binding.timerService.text = stringFromJNI()
         //enableWifiPermission()
 
     }

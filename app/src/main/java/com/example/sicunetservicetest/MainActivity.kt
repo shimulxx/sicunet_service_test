@@ -217,6 +217,12 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+    fun apkInstall(){
+        val result = apiManger.silentInstallApkStart("sdcard/test.apk", true)
+        //val result = apiManger.silentInstallApkStart("storage/emulated/0/Android/data/bd.sicunet.sicunetbd_intercom/files/downloads", true)
+        Log.d("Install Result", "apkInstall: $result")
+    }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -293,13 +299,13 @@ class MainActivity : AppCompatActivity() {
 //                "8.8.4.4"
 //            )
 
-            apiManger.setStaticIpMode(
-                "192.168.1.248",
-                "255.255.255.0",
-                "192.168.1.1",
-                "8.8.8.8",
-                "8.8.4.4"
-            )
+//            apiManger.setStaticIpMode(
+//                "192.168.1.248",
+//                "255.255.255.0",
+//                "192.168.1.1",
+//                "8.8.8.8",
+//                "8.8.4.4"
+//            )
 
 //            apiManger.setWifiStaticIpMode(
 //                "192.168.1.248",
@@ -311,6 +317,15 @@ class MainActivity : AppCompatActivity() {
 
             //apiManger.setWifiDhcpMode()
             //apiManger.setEthDhcpMode()
+
+            apiManger.setWifiDhcpMode()
+            apiManger.connectWifi("Sicunet 5G", "sicunet2025")
+            //apiManger.setWifiStaticIpMode()
+
+//            apkInstall()
+//
+//            Log.d("Time SET Work", "onCreate: ${apiManger.setNetworkTimeSyncEnable(1)}")
+//            Log.d("Time SET Work", "onCreate: ${apiManger.setSystemTimeZone("Asia/Dhaka")}")
 
         }
 //        binding.buttonStopService.setOnClickListener {
@@ -341,8 +356,8 @@ class MainActivity : AppCompatActivity() {
 //            bluetoothLeAdvertiser?.stopAdvertising(callback)
 //        }
 
-        //binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
-        binding.timerService.text = stringFromJNI()
+        binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
+        //binding.timerService.text = stringFromJNI()
         //enableWifiPermission()
 
     }

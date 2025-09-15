@@ -8,6 +8,9 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.ParcelUuid
+import android.provider.Settings
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
@@ -42,12 +45,19 @@ class BleGattServerManager(private val context: Context) {
         bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    @RequiresPermission(allOf = [
+        Manifest.permission.BLUETOOTH_CONNECT,
+    ])
     fun startServer() {
         if (!checkPermissions()) {
             Log.e(TAG, "Missing required permissions")
             return
         }
+
+
+        //bluetoothAdapter?.name = "IntercomInt" //max 11 byte
+
+        bluetoothAdapter?.name = "Intercom"
 
         if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
             Log.e(TAG, "Bluetooth is not enabled")
@@ -229,7 +239,7 @@ class BleGattServerManager(private val context: Context) {
 
         val scanResponse = AdvertiseData.Builder()
             .setIncludeDeviceName(true)
-            .addServiceUuid(android.os.ParcelUuid(SERVICE_UUID))
+            .addServiceUuid(ParcelUuid(SERVICE_UUID))
             .build()
 
         bluetoothLeAdvertiser!!.startAdvertising(settings, data, scanResponse, advertiseCallback)
@@ -257,13 +267,17 @@ class BleGattServerManager(private val context: Context) {
 
     // Send notification to connected device
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
-    fun sendNotification(device: BluetoothDevice, data: ByteArray): Boolean {
+    fun sendNotification(device: BluetoothDevice, data: ByteArray): Unit {
         val service = bluetoothGattServer?.getService(SERVICE_UUID)
         val characteristic = service?.getCharacteristic(NOTIFY_CHARACTERISTIC_UUID)
 
-        characteristic?.value = data
-
-        return bluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false) ?: false
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            bluetoothGattServer?.notifyCharacteristicChanged(device, characteristic!!, false, data)
+        }
+        else {
+            characteristic?.value = data
+            bluetoothGattServer?.notifyCharacteristicChanged(device, characteristic, false) ?: false
+        }
     }
 
     // Send notification to all connected devices
@@ -285,7 +299,7 @@ class BleGattServerManager(private val context: Context) {
             permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
         }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE)
             }

@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.lifecycleScope
 import com.dk.uartnfc.DKCloudID.IDCardData
@@ -59,6 +60,51 @@ class MainActivity : AppCompatActivity() {
         // Used to load the 'myndktest' library on application startup.
         init {
             System.loadLibrary("sicunetservicetest")
+        }
+        private const val BLUETOOTH_PERMISSION_REQUEST_CODE = 1001
+    }
+
+    private val bluetoothPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            // All permissions granted
+            Log.d("MainActivity", "All granted: ")
+        } else {
+            // Handle denied permissions
+            Log.d("MainActivity", "Not granted: ")
+        }
+    }
+
+    private fun requestBluetoothPermissions() {
+        val permissions = mutableListOf<String>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+
+            permissions.addAll(listOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_ADVERTISE
+            ))
+        } else {
+            // Android 11 and below
+            permissions.addAll(listOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ))
+        }
+
+        val permissionsToRequest = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            bluetoothPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            // All permissions already granted
+            //initializeBluetooth()
         }
     }
 
@@ -157,6 +203,7 @@ class MainActivity : AppCompatActivity() {
 
         })
     }
+
 
     var uartNfcDevice: UartNfcDevice? = null
     private fun initReader(){
@@ -281,8 +328,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        requestBluetoothPermissions()
         apiManger = ApiManager.getInstance(this)
         gattServerManager = BleGattServerManager(this)
+
+        //val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+
+        val mac = apiManger.btMac
+
+        Log.d("TESTING", "onCreate: $mac")
 
         gattServerManager.onDataReceived = { device, data ->
             Log.i("MainActivity", "Received from ${device.address}: ${String(data)}")

@@ -21,6 +21,7 @@ import android.net.wifi.WifiNetworkSpecifier
 import android.net.wifi.WifiNetworkSuggestion
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.ParcelUuid
 import android.util.Log
 import android.widget.Toast
@@ -31,12 +32,17 @@ import androidx.core.content.ContextCompat
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import android.provider.Settings
 import androidx.annotation.RequiresPermission
+import androidx.lifecycle.lifecycleScope
 import com.dk.uartnfc.DKCloudID.IDCardData
 import com.dk.uartnfc.DeviceManager.DeviceManagerCallback
 import com.dk.uartnfc.DeviceManager.UartNfcDevice
+import com.example.sicunetservicetest.MyForegroundService.Companion.tickValue
 import com.hwit.HwitManager
 import com.peripheral.library.PhController
 import com.sdk.api.manager.ApiManager
+import com.sdk.api.manager.IWGInputHandlerCallBack
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.net.NetworkInterface
 import java.util.UUID
 import kotlin.math.log
@@ -69,6 +75,8 @@ class MainActivity : AppCompatActivity() {
     private val MY_PERMISSIONS_WRITE_SETTINGS = 101
 
     private lateinit var apiManger: ApiManager
+
+    private lateinit var gattServerManager: BleGattServerManager
 
     private fun enableWifiPermission() {
         ActivityCompat.requestPermissions(
@@ -210,10 +218,15 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onDestroy() {
+        apiManger.unregisterCallWGInputHandler(wgiCallBack)
+        timerWeigend.cancel()
         uartNfcDevice?.closeDevice()
         uartNfcDevice?.destroy()
         uartNfcDevice?.release()
+        //bleAdvertiser.stopAdvertising()
+        gattServerManager.stopServer()
         super.onDestroy()
     }
 
@@ -223,14 +236,83 @@ class MainActivity : AppCompatActivity() {
         Log.d("Install Result", "apkInstall: $result")
     }
 
+    private var innerTickValue = 0
+    private val timerWeigend = object : CountDownTimer(Long.MAX_VALUE, 10) {
+        override fun onTick(millisUntilFinished: Long) {
+            //Log.d("WeigendTimer", "onTick: ${++innerTickValue}")
+            val w = PhController.weigen26Read()
+            if(!w.isEmpty()){
+                Log.d("CARD WORK", "onCreate: $w")
+            }
+            //else { Log.d("CARD WORK", "EMPTY") }
+
+        }
+
+        override fun onFinish() {
+            Log.d("WeigendTimer", "onFinish: called")
+        }
+    }
+
+    private lateinit var bleAdvertiser: BleAdvertiser
+
+    private val wgiCallBack = object : IWGInputHandlerCallBack.Stub() {
+        override fun WGInputHandler(p0: Int, p1: Long) {
+            Log.d("CARD WORK", "Value: $p1")
+        }
+    }
+
+    fun listenWiegandReader(){
+        apiManger.registerCallWGInputHandler(wgiCallBack)
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private fun handleReceivedData(device: BluetoothDevice, data: ByteArray) {
+        // Process the received data
+        val message = String(data)
+        Log.i("MainActivity", "Processing message: $message from ${device.address}")
+
+        // Echo back the data
+        gattServerManager.sendNotification(device, "Echo: $message".toByteArray())
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         apiManger = ApiManager.getInstance(this)
+        gattServerManager = BleGattServerManager(this)
+
+        gattServerManager.onDataReceived = { device, data ->
+            Log.i("MainActivity", "Received from ${device.address}: ${String(data)}")
+            // Handle the received data here
+            runOnUiThread {
+                // Update UI with received data
+                handleReceivedData(device, data)
+            }
+        }
+
+        gattServerManager.onDeviceConnected = { device ->
+            Log.i("MainActivity", "Device connected: ${device.address}")
+            // Send welcome message
+            gattServerManager.sendNotification(device, "Welcome!".toByteArray())
+        }
+
+        gattServerManager.onDeviceDisconnected = { device ->
+            Log.i("MainActivity", "Device disconnected: ${device.address}")
+        }
+
+        gattServerManager.startServer()
+//        bleAdvertiser = BleAdvertiser(this)
+//        bleAdvertiser.startAdvertising()
+
+        //listenWiegandReader()
+
+        //timerWeigend.start()
+
         //initWeigonListener()
-        initReader()
+        //initReader()
 //        requestPermissions(
 //            arrayOf(
 //                Manifest.permission.BLUETOOTH_ADVERTISE,
@@ -238,6 +320,9 @@ class MainActivity : AppCompatActivity() {
 //            577
 //        )
         binding.buttonStartBle.setOnClickListener {
+            val w = PhController.weigen26Read()
+            Log.d("CARD WORK", "onCreate: $w")
+            binding.timerService.text = w
             //connectToWifi("Sicunet 5G", "sicunet2025")
 //            if(!Settings.System.canWrite(this)){
 //                requestWriteSettingsPermission(this)
@@ -291,6 +376,7 @@ class MainActivity : AppCompatActivity() {
 
             Log.d("MainActivity Work", "${apiManger.runningMemory}")
 
+
 //            apiManger.setStaticIpMode(
 //                "192.168.1.20",
 //                "255.255.255.0",
@@ -318,8 +404,12 @@ class MainActivity : AppCompatActivity() {
             //apiManger.setWifiDhcpMode()
             //apiManger.setEthDhcpMode()
 
-            apiManger.setWifiDhcpMode()
-            apiManger.connectWifi("Sicunet 5G", "sicunet2025")
+//            apiManger.setWifiDhcpMode()
+//            apiManger.connectWifi("Sicunet 5G", "sicunet2025")
+
+            PhController.showStatusBar(this)
+            PhController.showNavigationBar(this)
+
             //apiManger.setWifiStaticIpMode()
 
 //            apkInstall()
@@ -327,37 +417,63 @@ class MainActivity : AppCompatActivity() {
 //            Log.d("Time SET Work", "onCreate: ${apiManger.setNetworkTimeSyncEnable(1)}")
 //            Log.d("Time SET Work", "onCreate: ${apiManger.setSystemTimeZone("Asia/Dhaka")}")
 
-        }
-//        binding.buttonStopService.setOnClickListener {
-//            //HwitManager.HwitSetIOValue(5, 0)
-//            //adb command: adb shell ifconfig eth0
-//
-//            //HwitManager.HwitSetDhcpIp(this)
-//
-////            HwitManager.HwitSetStaticIp(
-////                this,
-////                "192.168.1.52",
-////                "192.168.1.1",
-////                "255.255.255.0",
-////                "8.8.8.8",
-////                "8.8.4.4",
-////            )
-//
-////            PhController.whiteLight_Control_Close(this)
-////
-////            PhController.close_Led()
-//
-////            PhController.hideNavigationBar(this)
-////            PhController.hideStatusBar(this)
-//
-//            //PhController.relay_Control_Close()
-//
-//           // PhController.doorbell_control_close()
-//            bluetoothLeAdvertiser?.stopAdvertising(callback)
-//        }
+            apiManger.setWifiStaticIpMode(
+                "192.168.1.252",
+                24,
+                "192.168.1.1",
+                "8.8.8.8",
+                "8.8.4.4"
+            )
 
-        binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
-        //binding.timerService.text = stringFromJNI()
+        }
+        binding.buttonStopService.setOnClickListener {
+            //HwitManager.HwitSetIOValue(5, 0)
+            //adb command: adb shell ifconfig eth0
+
+            //HwitManager.HwitSetDhcpIp(this)
+
+//            HwitManager.HwitSetStaticIp(
+//                this,
+//                "192.168.1.52",
+//                "192.168.1.1",
+//                "255.255.255.0",
+//                "8.8.8.8",
+//                "8.8.4.4",
+//            )
+
+//            PhController.whiteLight_Control_Close(this)
+//
+//            PhController.close_Led()
+
+//            PhController.hideNavigationBar(this)
+//            PhController.hideStatusBar(this)
+
+            //PhController.relay_Control_Close()
+
+           // PhController.doorbell_control_close()
+            //bluetoothLeAdvertiser?.stopAdvertising(callback)
+
+//            apiManger.setWifiDhcpMode()
+//            apiManger.connectWifi("Sicunet 5G", "sicunet2025")
+
+            //apiManger.connectWifi("Sicunet 5G", "sicunet2025")
+
+//            lifecycleScope.launch {
+//                apiManger.connectWifi("Sicunet 5G", "sicunet2025")
+//                delay(5000)
+//                apiManger.setWifiStaticIpMode(
+//                    "192.168.1.248",
+//                    24,
+//                    "192.168.1.1",
+//                    "8.8.8.8",
+//                    "8.8.4.4",
+//                )
+//            }
+
+        }
+
+        //binding.timerService.text = getLocalIpAddress() ?: "NO IP FOUND"
+        binding.timerService.text = stringFromJNI()
         //enableWifiPermission()
 
     }

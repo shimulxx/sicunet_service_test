@@ -21,9 +21,15 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -35,6 +41,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SicunetServiceTest"
         tools:targetApi="31">
+
+
 
         <activity
             android:name=".MainActivity"
@@ -73,5 +81,6 @@
         </receiver>
 
     </application>
+
 
 </manifest>

@@ -22,11 +22,11 @@ class MyForegroundService : Service() {
 
     private val timer = object : CountDownTimer(3000000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
-            Log.d(tag, "onTick: ${++tickValue}")
+            Log.d("WeigendTimer", "onTick: ${++tickValue}")
         }
 
         override fun onFinish() {
-            Log.d(tag, "onFinish: called")
+            Log.d("WeigendTimer", "onFinish: called")
         }
     }
 

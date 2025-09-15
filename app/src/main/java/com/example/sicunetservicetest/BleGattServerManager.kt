@@ -1,18 +1,21 @@
 package com.example.sicunetservicetest
 
 import android.Manifest
+import android.app.Activity
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.ParcelUuid
-import android.provider.Settings
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import java.util.*
 
@@ -59,14 +62,42 @@ class BleGattServerManager(private val context: Context) {
 
         bluetoothAdapter?.name = "Intercom"
 
-        if (bluetoothAdapter == null || !bluetoothAdapter!!.isEnabled) {
-            Log.e(TAG, "Bluetooth is not enabled")
+        if (bluetoothAdapter == null) {
+            Log.e(TAG, "Bluetooth is not supported")
             return
         }
 
+        if(!bluetoothAdapter!!.isEnabled){
+            //bluetoothAdapter?.enable() //deprecated
+            requestEnableBluetoothAndStartServer()
+            return
+        }
+        initGattServer()
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private fun initGattServer(){
         setupGattServer()
         startAdvertising()
     }
+
+    private fun requestEnableBluetoothAndStartServer() {
+        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        bluetoothEnableLauncher.launch(enableBtIntent) // Correct usage
+    }
+
+    private val bluetoothEnableLauncher = (context as AppCompatActivity).registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser
+            initGattServer()
+        }
+        else {
+            //onBluetoothEnableFailed()
+        }
+    }
+
 
     @RequiresPermission(allOf = [
         Manifest.permission.BLUETOOTH_CONNECT,
@@ -167,7 +198,7 @@ class BleGattServerManager(private val context: Context) {
                         }
                     }
 
-                    if (responseNeeded) {
+                    if (responseNeeded) { //response needed from client, this is set from flutter blue plus selchar.write(responseNeeded: true/false)
                         bluetoothGattServer?.sendResponse(
                             device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value
                         )

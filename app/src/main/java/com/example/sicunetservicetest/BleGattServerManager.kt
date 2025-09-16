@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.util.*
 
 class BleGattServerManager(private val context: Context) {
@@ -88,16 +89,16 @@ class BleGattServerManager(private val context: Context) {
 
     private val bluetoothEnableLauncher = (context as AppCompatActivity).registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) { result ->
+    )  { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             bluetoothLeAdvertiser = bluetoothAdapter?.bluetoothLeAdvertiser
             initGattServer()
+
         }
         else {
             //onBluetoothEnableFailed()
         }
     }
-
 
     @RequiresPermission(allOf = [
         Manifest.permission.BLUETOOTH_CONNECT,

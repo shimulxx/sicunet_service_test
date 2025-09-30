@@ -61,7 +61,8 @@ android {
 dependencies {
     implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/SicunetServiceTest/lib33'))
     implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/SicunetServiceTest/lib2'))
-    implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/SicunetServiceTest/lib_work_new'))
+    //implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/SicunetServiceTest/lib_work_new'))
+    implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/SicunetServiceTest/lib_new_test'))
     //implementation(fileTree('/Users/sicunetappdeveloper/StudioProjects/sicunet_service_test/library_work'))
     implementation libs.androidx.core.ktx
     implementation libs.androidx.appcompat

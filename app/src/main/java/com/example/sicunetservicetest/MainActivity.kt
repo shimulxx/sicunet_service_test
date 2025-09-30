@@ -45,6 +45,8 @@ import com.sdk.api.manager.IWGInputHandlerCallBack
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.net.NetworkInterface
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.UUID
 import kotlin.math.log
 
@@ -304,8 +306,67 @@ class MainActivity : AppCompatActivity() {
 
     private val wgiCallBack = object : IWGInputHandlerCallBack.Stub() {
         override fun WGInputHandler(p0: Int, p1: Long) {
-            Log.d("CARD WORK", "Value: $p1")
+            Log.d("CARD WORK", "P0: $p0  Value: $p1")
+
+            val curValue = p1.toString(16)
+            val builder = StringBuilder()
+
+            var i = curValue.length - 1;
+            while(i >= 1){
+                builder.append(curValue[i - 1])
+                builder.append(curValue[i])
+                i -= 2
+            }
+
+            val cardSerialHex = builder.toString()
+            val facility = cardSerialHex.take(2)
+            val serialNumber = cardSerialHex.drop(2)
+            val facilityCode = facility.toInt(16)
+            val serialNumberInt = serialNumber.toInt(16)
+
+            val mp = mutableMapOf(
+                "Card Type" to p0,
+                "Facility Code" to facilityCode,
+                "Serial Number" to serialNumberInt,
+                "Serial Hex" to cardSerialHex
+            )
+            Log.d("CARD WORK", "Byte Indian: $mp")
+            //cardNumber(p1)
         }
+    }
+
+    fun cardNumber(data: Long) {
+        val bigEndianBuffer = ByteBuffer.allocate(Long.SIZE_BYTES)
+        bigEndianBuffer.putLong(data)
+        val bytesBigEndian = bigEndianBuffer.array()
+
+        val littleEndianBuffer = ByteBuffer.allocate(Long.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN)
+        littleEndianBuffer.putLong(data)
+        val bytesLittleEndian = littleEndianBuffer.array()
+
+        val fourBytesLittleEndian = ByteArray(4)
+        System.arraycopy(bytesLittleEndian, 0, fourBytesLittleEndian, 0, 4)
+
+        val longBuffer = ByteBuffer.allocate(Long.SIZE_BYTES).order(ByteOrder.LITTLE_ENDIAN)
+        longBuffer.put(fourBytesLittleEndian)
+        longBuffer.put(ByteArray(4)) // 补 4 个 0 字节
+        longBuffer.rewind()
+        val decimalValue = longBuffer.getLong()
+
+        Log.d("CARD WORK", "=========: 0x${bytesToHexNoSpace(bytesBigEndian)}")
+        Log.d("CARD WORK", "=========(hex):${bytesToHexNoSpace(fourBytesLittleEndian)}")
+        val decimal = bytesToHexNoSpace(fourBytesLittleEndian).toLong(16)
+        Log.d("CARD WORK", "======== decimal=$decimal")
+        Log.d("CARD WORK", "========== : ${bytesToHex(fourBytesLittleEndian)}")
+        Log.d("CARD WORK", "==========: $decimalValue")
+    }
+
+    private fun bytesToHexNoSpace(bytes: ByteArray): String {
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        return bytes.joinToString(" ") { "%02x".format(it) }
     }
 
     fun listenWiegandReader(){
@@ -361,12 +422,12 @@ class MainActivity : AppCompatActivity() {
 //        bleAdvertiser = BleAdvertiser(this)
 //        bleAdvertiser.startAdvertising()
 
-        //listenWiegandReader()
+        listenWiegandReader()
 
         //timerWeigend.start()
 
         //initWeigonListener()
-        //initReader()
+        initReader()
 //        requestPermissions(
 //            arrayOf(
 //                Manifest.permission.BLUETOOTH_ADVERTISE,
@@ -468,8 +529,8 @@ class MainActivity : AppCompatActivity() {
 
 //            apkInstall()
 //
-//            Log.d("Time SET Work", "onCreate: ${apiManger.setNetworkTimeSyncEnable(1)}")
-//            Log.d("Time SET Work", "onCreate: ${apiManger.setSystemTimeZone("Asia/Dhaka")}")
+            Log.d("Time SET Work", "onCreate: ${apiManger.setNetworkTimeSyncEnable(1)}")
+            Log.d("Time SET Work", "onCreate: ${apiManger.setSystemTimeZone("Asia/Dhaka")}")
 
             apiManger.setWifiStaticIpMode(
                 "192.168.1.252",

@@ -15,17 +15,10 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.dk.uartnfc.DeviceManager.UartNfcDevice
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
-import com.hwit.HwitManager.HwitGetBoardEthIp
-import com.hwit.HwitManager
-import com.hwit.HwitManager.HwitGetCpuTemp
-import com.hwit.HwitManager.HwitSetIOValue
-import com.hwit.HwitManager.HwitGetIOValue
-import com.hwit.HwitManager.HwitRebootSystem
-import com.hwit.HwitManager.HwitSetLocalIP
-import com.hwit.HwitManager.getAvailableCpuFreq
-import com.hwit.HwitManager.HwitSetWifiDhcpIpConnect
-import com.hwit.HwitManager.HwitSetWifiStaticIpConnect
+import com.peripheral.library.PhController
+import com.sdk.api.manager.ApiManager
 
 
 class MainActivity : AppCompatActivity() {
@@ -36,6 +29,10 @@ class MainActivity : AppCompatActivity() {
 
     val PERMISSION_REQUEST_CODE: Int = 1
 
+
+    private var apiManager: ApiManager? = null
+
+    private var uartNfcDevice: UartNfcDevice? = null
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -56,15 +53,31 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        apiManager = ApiManager.getInstance(this)
+
         // Set the content view to the root of the binding object
         setContentView(binding.root)
-        val currentValue = HwitGetIOValue(5)
-        Log.d(tag, "onCreate: current value: $currentValue")
+        Log.d(tag, "onCreate: current value:")
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
 //            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
 //        }
 //        val serviceIntent = Intent(this, MyForegroundService::class.java)
         binding.buttonStartBle.setOnClickListener {
+            //apiManager?.setBacklightBright(0)
+
+
+            PhController.relay_Control_Open()
+//            PhController.red_Led_Open()
+//            PhController.whiteLight_Control_Open(this)
+
+            Log.d("TEST WORK Door Sensor", "onCreate: ${apiManager?.dsStatus}") //Door Sensor
+//
+//            Log.d("TEST WORK DO", "onCreate: ${apiManager?.doorbell}")
+
+            Log.d("TEST WORK Door Open", "onCreate: ${apiManager?.openDoorStatus}") //Open Button
+
+            Log.d("TEST WORK BELL", "onCreate: ${apiManager?.doorbell}") //Door Bell
+
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            val powerManager = getSystemService(POWER_SERVICE) as PowerManager?
 //            powerManager?.reboot(null)
@@ -92,6 +105,16 @@ class MainActivity : AppCompatActivity() {
 //            )
         }
         binding.buttonStopService.setOnClickListener {
+
+            PhController.relay_Control_Close()
+            PhController.green_Led_Open()
+            PhController.whiteLight_Control_Close(this)
+
+
+
+//            apiManager?.setBacklightBright(1)
+//            apiManager?.screenOffTimeout = 1
+            //apiManager?.setWifiEnabled(false)
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            applicationContext.stopService(serviceIntent)
             //val result = HwitGetCpuTemp()

@@ -49,6 +49,25 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    private fun exec(cmd: String): String {
+        return try {
+            Runtime.getRuntime().exec(cmd).inputStream.bufferedReader().readText()
+        } catch (e: Exception) {
+            "Error: ${e.message}"
+        }
+    }
+
+    private fun execRoot(cmd: String): String {
+        return try {
+            val p = Runtime.getRuntime().exec("su")
+            p.outputStream.write("$cmd\nexit\n".toByteArray())
+            p.outputStream.flush()
+            p.inputStream.bufferedReader().readText()
+        } catch (e: Exception) {
+            "Error: ${e.message}"
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,18 +84,27 @@ class MainActivity : AppCompatActivity() {
         binding.buttonStartBle.setOnClickListener {
             //apiManager?.setBacklightBright(0)
 
+            val result = execRoot("whoami")
+            val result2 = execRoot("getprop ro.product.model")
 
-            PhController.relay_Control_Open()
+            Log.d("SHELL RESULT", "onCreate: $result")
+            Log.d("SHELL RESULT", "onCreate: $result2")
+
+            //PhController.relay_Control_Open()
 //            PhController.red_Led_Open()
 //            PhController.whiteLight_Control_Open(this)
 
-            Log.d("TEST WORK Door Sensor", "onCreate: ${apiManager?.dsStatus}") //Door Sensor
-//
-//            Log.d("TEST WORK DO", "onCreate: ${apiManager?.doorbell}")
+//            Log.d("SDK TESTING", "BT MAC: ${apiManager?.btMac}")
+//            Log.d("SDK TESTING", "WIFI MAC: ${apiManager?.wifiMac}")
+//            Log.d("SDK TESTING", "LAN MAC: ${apiManager?.ethMac}")
 
-            Log.d("TEST WORK Door Open", "onCreate: ${apiManager?.openDoorStatus}") //Open Button
-
-            Log.d("TEST WORK BELL", "onCreate: ${apiManager?.doorbell}") //Door Bell
+//            Log.d("TEST WORK Door Sensor", "onCreate: ${apiManager?.dsStatus}") //Door Sensor
+//////
+//////            Log.d("TEST WORK DO", "onCreate: ${apiManager?.doorbell}")
+////
+//            Log.d("TEST WORK Door Open", "onCreate: ${apiManager?.openDoorStatus}") //Open Button
+////
+//            Log.d("TEST WORK BELL", "onCreate: ${apiManager?.doorbell}") //Door Bell
 
 //            Log.d(tag, "onCreate: clicked ${++value}")
 //            val powerManager = getSystemService(POWER_SERVICE) as PowerManager?
@@ -106,9 +134,9 @@ class MainActivity : AppCompatActivity() {
         }
         binding.buttonStopService.setOnClickListener {
 
-            PhController.relay_Control_Close()
-            PhController.green_Led_Open()
-            PhController.whiteLight_Control_Close(this)
+//            PhController.relay_Control_Close()
+//            PhController.green_Led_Open()
+//            PhController.whiteLight_Control_Close(this)
 
 
 

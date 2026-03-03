@@ -102,15 +102,6 @@ class MainActivity : AppCompatActivity() {
             // ── Interface Name ───────────────────────────────────────────────
             val interfaceName = linkProperties?.interfaceName ?: "unknown"
 
-            // ── Connection Type ──────────────────────────────────────────────
-            val connectionType = when {
-                capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true -> "LAN (Ethernet)"
-                capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)     == true -> "WiFi"
-                capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cellular"
-                capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN)      == true -> "VPN"
-                else -> "Unknown"
-            }
-
             return mutableMapOf<String, String>().apply {
                 put("address", ipAddress)
                 put("via",     interfaceName)

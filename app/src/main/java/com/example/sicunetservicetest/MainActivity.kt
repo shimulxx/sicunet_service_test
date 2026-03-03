@@ -1,9 +1,12 @@
 package com.example.sicunetservicetest
+import android.Manifest
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +15,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -19,6 +23,8 @@ import com.dk.uartnfc.DeviceManager.UartNfcDevice
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import com.peripheral.library.PhController
 import com.sdk.api.manager.ApiManager
+import java.net.Inet4Address
+import java.net.NetworkInterface
 
 
 class MainActivity : AppCompatActivity() {
@@ -73,10 +79,34 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         apiManager = ApiManager.getInstance(this)
+        val dd = getLocalIpAddress()
+        Log.d("Network Details", "onCreate: $dd")
+//
+//        apiManager?.connectWifi("sicunet", "sicunet2025")
+//
+//        apiManager?.setWifiDhcpMode();
+//
+//        apiManager?.setWifiStaticIpMode(
+//            "192.168.1.100",
+//            24,
+//            "192.168.1.1",
+//            "8.8.8.8",
+//            "8.8.4.4",
+//        )
+//
+//        apiManager?.setEthDhcpMode()
+//
+//        apiManager?.setStaticIpMode(
+//            "192.168.1.100",
+//            "255.255.255.0",
+//            "192.168.1.1",
+//            "8.8.8.8",
+//            "8.8.4.4",
+//        )
 
         // Set the content view to the root of the binding object
-        setContentView(binding.root)
-        Log.d(tag, "onCreate: current value:")
+//        setContentView(binding.root)
+//        Log.d(tag, "onCreate: current value:")
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
 //            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
 //        }
@@ -84,11 +114,32 @@ class MainActivity : AppCompatActivity() {
         binding.buttonStartBle.setOnClickListener {
             //apiManager?.setBacklightBright(0)
 
-            val result = execRoot("whoami")
-            val result2 = execRoot("getprop ro.product.model")
+//            val result = execRoot("whoami")
+//            val result2 = execRoot("getprop ro.product.model")
+//
+//            Log.d("SHELL RESULT", "onCreate: $result")
+//            Log.d("SHELL RESULT", "onCreate: $result2")
 
-            Log.d("SHELL RESULT", "onCreate: $result")
-            Log.d("SHELL RESULT", "onCreate: $result2")
+
+//            val cmd = "export LD_LIBRARY_PATH=/data/local/tmp/libs\n/data/local/tmp/jupiter/bin/jupiter-command macinfo"
+//
+//            val cmd2 = "export LD_LIBRARY_PATH=/data/local/tmp/libs\n/data/local/tmp/jupiter/bin/jupiter-common getcredential"
+//
+//            val result = execRoot(cmd2)
+//            //val result2 = execRoot("getprop ro.product.model")
+//
+//            //val lan = apiManager?.ethMac
+//
+//            Log.d("SHELL RESULT", "shell: $result")
+
+            
+            Log.d("Tamper Status", "alarm: ${apiManager?.tamperAlarmStatus}")
+
+            Log.d("Tamper Status", "door status: ${apiManager?.openDoorStatus}")
+
+            //Log.d("SHELL RESULT", "lan: $lan")
+
+            //Log.d("SHELL RESULT", "onCreate: $result2")
 
             //PhController.relay_Control_Open()
 //            PhController.red_Led_Open()
@@ -102,7 +153,7 @@ class MainActivity : AppCompatActivity() {
 //////
 //////            Log.d("TEST WORK DO", "onCreate: ${apiManager?.doorbell}")
 ////
-//            Log.d("TEST WORK Door Open", "onCreate: ${apiManager?.openDoorStatus}") //Open Button
+//            Log.d("TEST WORK Door Open", "onCreate: ${apiManager?.√}") //Open Button
 ////
 //            Log.d("TEST WORK BELL", "onCreate: ${apiManager?.doorbell}") //Door Bell
 
@@ -177,6 +228,171 @@ class MainActivity : AppCompatActivity() {
         //pinScreen()
 
         //requestPermission2()
+    }
+
+//    fun getNetworkDetails(context: Context): Map<String, String> {
+//
+//        val connectivityManager = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+//
+//        val network = connectivityManager.activeNetwork ?: return emptyMap()
+//        val linkProperties = connectivityManager.getLinkProperties(network) ?: return emptyMap()
+//
+//        val result = mutableMapOf<String, String>()
+//
+//        // IP + Subnet
+//        linkProperties.linkAddresses.forEach { linkAddress ->
+//            if (linkAddress.address is Inet4Address) {
+//                result["ip"] = linkAddress.address.hostAddress ?: ""
+//                result["subnet"] = prefixToSubnetMask(linkAddress.prefixLength)
+//            }
+//        }
+//
+//        // Gateway
+//        linkProperties.routes.forEach { route ->
+//            route.gateway?.let {
+//                if (it is Inet4Address) {
+//                    result["gateway"] = it.hostAddress ?: ""
+//                }
+//            }
+//        }
+//
+//        // DNS
+//        linkProperties.dnsServers.forEachIndexed { index, dns ->
+//            if (dns is Inet4Address) {
+//                result["dns${index + 1}"] = dns.hostAddress ?: ""
+//            }
+//        }
+//
+//        return result
+//    }
+//
+//    private fun prefixToSubnetMask(prefixLength: Int): String {
+//        val mask = -0x1 shl (32 - prefixLength)
+//        return listOf(
+//            mask shr 24 and 0xFF,
+//            mask shr 16 and 0xFF,
+//            mask shr 8 and 0xFF,
+//            mask and 0xFF
+//        ).joinToString(".")
+//    }
+
+//    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+//    private fun getLocalIpAddress(context: Context): MutableMap<String, String> {
+//        try {
+//            val interfaces = NetworkInterface.getNetworkInterfaces()
+//            while (interfaces.hasMoreElements()) {
+//                val networkInterface = interfaces.nextElement()
+//                val addresses = networkInterface.inetAddresses
+//                while (addresses.hasMoreElements()) {
+//                    val address = addresses.nextElement()
+//                    if (!address.isLoopbackAddress && address.hostAddress != null) {
+//                        if (address.hostAddress.indexOf(':') < 0) {
+//
+//                            // ── Subnet ───────────────────────────────────────────
+//                            val subnet = networkInterface.interfaceAddresses
+//                                .firstOrNull { it.address == address }
+//                                ?.let { prefixLengthToSubnetMask(it.networkPrefixLength.toInt()) }
+//                                ?: "Not found"
+//
+//                            // ── Gateway + DNS ────────────────────────────────────
+//                            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//                            val linkProperties = cm.getLinkProperties(cm.activeNetwork)
+//
+//                            val gateway = linkProperties?.routes
+//                                ?.firstOrNull { it.isDefaultRoute && it.gateway != null }
+//                                ?.gateway?.hostAddress ?: "Not found"
+//
+//                            val dnsServers = linkProperties?.dnsServers
+//                            val dns1 = dnsServers?.getOrNull(0)?.hostAddress ?: "Not found"
+//                            val dns2 = dnsServers?.getOrNull(1)?.hostAddress ?: "Not found"
+//
+//                            // ── Connection Type ──────────────────────────────────
+//                            val connectionType = getConnectionType(context)
+//
+//                            return mutableMapOf<String, String>().apply {
+//                                put("address", address.hostAddress ?: "")
+//                                put("via",     "$connectionType (${networkInterface.displayName ?: "unknown"})")
+//                                put("subnet",  subnet)
+//                                put("gateway", gateway)
+//                                put("dns1",    dns1)
+//                                put("dns2",    dns2)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (ex: Exception) {
+//            Log.d("NetworkInfo", "exception: ${ex.printStackTrace()}")
+//            return mutableMapOf<String, String>().apply {
+//                put("address", "Exception occurs")
+//                put("via",     "Exception occurs")
+//                put("subnet",  "Exception occurs")
+//                put("gateway", "Exception occurs")
+//                put("dns1",    "Exception occurs")
+//                put("dns2",    "Exception occurs")
+//            }
+//        }
+//
+//        return mutableMapOf<String, String>().apply {
+//            put("address", "Not found")
+//            put("via",     "Not found")
+//            put("subnet",  "Not found")
+//            put("gateway", "Not found")
+//            put("dns1",    "Not found")
+//            put("dns2",    "Not found")
+//        }
+//    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    private fun getLocalIpAddress(): MutableMap<String, String> {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val networkInterface = interfaces.nextElement()
+                val addresses = networkInterface.inetAddresses
+                while (addresses.hasMoreElements()) {
+                    val address = addresses.nextElement()
+                    if (!address.isLoopbackAddress && address.hostAddress != null) {
+                        if (address.hostAddress.indexOf(':') < 0) {
+                            return mutableMapOf<String, String>().apply {
+                                put("address", address.hostAddress ?: "")
+                                put("via", networkInterface.displayName ?: "")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (ex: Exception) {
+            Log.d("exception is", "exception: ${ex.printStackTrace()}")
+            return mutableMapOf<String, String>().apply {
+                put("address", "Exception occurs")
+                put("via", "Exception occurs")
+            }
+        }
+        return mutableMapOf<String, String>().apply {
+            put("address", "Not found")
+            put("via", "Not found")
+        }
+    }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+    private fun prefixLengthToSubnetMask(prefixLength: Int): String {
+        val mask = if (prefixLength == 0) 0 else (-1 shl (32 - prefixLength))
+        return "${(mask shr 24) and 0xFF}.${(mask shr 16) and 0xFF}.${(mask shr 8) and 0xFF}.${mask and 0xFF}"
+    }
+
+    private fun getConnectionType(context: Context): String {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities = cm.getNetworkCapabilities(cm.activeNetwork) ?: return "Not connected"
+        return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "LAN (Ethernet)"
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)     -> "WiFi"
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Cellular"
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)      -> "VPN"
+            else -> "Unknown"
+        }
     }
 
     private fun requestPermission2(){

@@ -127,36 +127,4 @@ class MainActivity : AppCompatActivity() {
         val mask = if (prefixLength == 0) 0 else (-1 shl (32 - prefixLength))
         return "${(mask shr 24) and 0xFF}.${(mask shr 16) and 0xFF}.${(mask shr 8) and 0xFF}.${mask and 0xFF}"
     }
-
-//    private fun getLocalIpAddress(): MutableMap<String, String> {
-//        try {
-//            val interfaces = NetworkInterface.getNetworkInterfaces()
-//            while (interfaces.hasMoreElements()) {
-//                val networkInterface = interfaces.nextElement()
-//                val addresses = networkInterface.inetAddresses
-//                while (addresses.hasMoreElements()) {
-//                    val address = addresses.nextElement()
-//                    if (!address.isLoopbackAddress && address.hostAddress != null) {
-//                        if (address.hostAddress.indexOf(':') < 0) {
-//                            return mutableMapOf<String, String>().apply {
-//                                put("address", address.hostAddress ?: "")
-//                                put("via", networkInterface.displayName ?: "")
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        catch (ex: Exception) {
-//            Log.d("exception is", "exception: ${ex.printStackTrace()}")
-//            return mutableMapOf<String, String>().apply {
-//                put("address", "Exception occurs")
-//                put("via", "Exception occurs")
-//            }
-//        }
-//        return mutableMapOf<String, String>().apply {
-//            put("address", "Not found")
-//            put("via", "Not found")
-//        }
-//    }
 }

@@ -77,7 +77,6 @@ class MainActivity : AppCompatActivity() {
         try {
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val linkProperties = cm.getLinkProperties(cm.activeNetwork)
-            val capabilities   = cm.getNetworkCapabilities(cm.activeNetwork)
 
             // ── IP Address ───────────────────────────────────────────────────
             val address = linkProperties?.linkAddresses

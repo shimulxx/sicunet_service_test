@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
         //apiManager = ApiManager.getInstance(this)
 
         binding.buttonStartBle.setOnClickListener {
-            val info = getLocalIpAddress(this)
-            Log.d("AppActivity", "onCreate: $info")
+//            val info = getLocalIpAddress(this)
+//            Log.d("AppActivity", "onCreate: $info")
         }
         binding.buttonStopService.setOnClickListener {
 
@@ -67,7 +67,8 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.ACCESS_NETWORK_STATE
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.RECORD_AUDIO,
             ),
             PERMISSION_REQUEST_CODE
         )

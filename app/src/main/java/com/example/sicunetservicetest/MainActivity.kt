@@ -1,12 +1,13 @@
 package com.example.sicunetservicetest
+
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -14,7 +15,6 @@ import com.dk.uartnfc.DeviceManager.UartNfcDevice
 import com.example.sicunetservicetest.databinding.ActivityMainBinding
 import com.sdk.api.manager.ApiManager
 import java.net.Inet4Address
-import java.net.NetworkInterface
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -24,21 +24,9 @@ class MainActivity : AppCompatActivity() {
 
     val PERMISSION_REQUEST_CODE: Int = 1
 
-
     private var apiManager: ApiManager? = null
 
     private var uartNfcDevice: UartNfcDevice? = null
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String?>, grantResults: IntArray) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, proceed with accessing phone state
-            } else {
-                // Permission denied, inform the user
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
 
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -52,9 +40,18 @@ class MainActivity : AppCompatActivity() {
         binding.buttonStartBle.setOnClickListener {
 //            val info = getLocalIpAddress(this)
 //            Log.d("AppActivity", "onCreate: $info")
+            TwilioCallManager.call(
+                this,
+                "",
+                "+8801745327032",
+                { Log.d(tag, "onRinging") },
+                { Log.d(tag, "onConnected") },
+                { Log.d(tag, "onDisconnected") },
+                { Log.d(tag, "onError") },
+            )
         }
         binding.buttonStopService.setOnClickListener {
-
+           TwilioCallManager.hangUp()
         }
     }
 
@@ -72,6 +69,20 @@ class MainActivity : AppCompatActivity() {
             ),
             PERMISSION_REQUEST_CODE
         )
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String?>, grantResults: IntArray) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            var allGranted = true
+            for(item in grantResults){
+                if(item != PackageManager.PERMISSION_GRANTED){
+                    allGranted = false
+                    break
+                }
+            }
+            Toast.makeText(this, "All granted: $allGranted", Toast.LENGTH_SHORT).show()
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     private fun getLocalIpAddress(context: Context): MutableMap<String, String> {
